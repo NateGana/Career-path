@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CareerPath — Internship &amp; Job Application Tracker</title>
+<meta name="description" content="A local-first pipeline manager for tracking internship and job applications, interviews, offers, and follow-ups.">
+
+<!-- Typography: Space Grotesk carries the brand voice, Inter runs the interface, JetBrains Mono handles data & numbers -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     DESIGN TOKENS
+     ============================================================ */
+  :root{
+    --slate-950:#0B1220;
+    --slate-900:#0F172A;
+    --slate-800:#1E293B;
+    --slate-700:#2A3A52;
+    --slate-600:#334155;
+    --slate-400:#94A3B8;
+    --slate-300:#B6C2D4;
+    --slate-100:#E2E8F0;
+
+    --indigo:#6366F1;
+    --indigo-dim:rgba(99,102,241,0.16);
+    --emerald:#10B981;
+    --emerald-dim:rgba(16,185,129,0.16);
+    --amber:#F59E0B;
+    --amber-dim:rgba(245,158,11,0.16);
+    --crimson:#EF4444;
+    --crimson-dim:rgba(239,68,68,0.16);
+    --slate-accent:#64748B;
+    --slate-accent-dim:rgba(100,116,139,0.16);
+
+    --radius-sm:8px;
+    --radius-md:12px;
+    --radius-lg:16px;
+
+    --shadow-card:0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-pop:0 20px 60px -20px rgba(0,0,0,0.7);
+
+    --font-display:'Space Grotesk', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, sans-serif;
+    --font-mono:'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  *,*::before,*::after{ box-sizing:border-box; }
+
+  html{ color-scheme: dark; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 12% -10%, rgba(99,102,241,0.10), transparent 60%),
+      radial-gradient(900px 500px at 100% 0%, rgba(16,185,129,0.06), transparent 55%),
+      var(--slate-900);
+    color:var(--slate-100);
+    font-family:var(--font-body);
+    line-height:1.5;
+    min-height:100vh;
+  }
+
+  a{ color:inherit; }
+
+  ::selection{ background:var(--indigo); color:#fff; }
+
+  /* Focus visibility kept intentional and visible everywhere */
+  :focus-visible{
+    outline:2px solid var(--indigo);
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
+  button{ font-family:inherit; cursor:pointer; }
+
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ============================================================
+     LAYOUT SHELL
+     ============================================================ */
+  .app-shell{
+    max-width:1440px;
+    margin:0 auto;
+    padding:28px 28px 80px;
+  }
+
+  /* ---------- Header / Brand ---------- */
+  .app-header{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+    margin-bottom:28px;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+
+  .brand-mark{
+    width:44px; height:44px;
+    border-radius:12px;
+    background:linear-gradient(155deg, var(--indigo), #4338CA);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 20px -6px rgba(99,102,241,0.55);
+    flex-shrink:0;
+  }
+  .brand-mark svg{ width:24px; height:24px; }
+
+  .brand-text h1{
+    font-family:var(--font-display);
+    font-size:22px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    margin:0 0 2px;
+  }
+  .brand-text p{
+    margin:0;
+    font-size:13px;
+    color:var(--slate-400);
+  }
+
+  .header-actions{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 16px;
+    border-radius:10px;
+    border:1px solid var(--slate-600);
+    background:var(--slate-800);
+    color:var(--slate-100);
+    font-size:13.5px;
+    font-weight:600;
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+    white-space:nowrap;
+  }
+  .btn:hover{ border-color:var(--slate-400); transform:translateY(-1px); }
+  .btn:active{ transform:translateY(0); }
+  .btn svg{ width:16px; height:16px; flex-shrink:0; }
+
+  .btn-primary{
+    background:linear-gradient(155deg, var(--indigo), #4F46E5);
+    border-color:transparent;
+    box-shadow:0 6px 18px -6px rgba(99,102,241,0.6);
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+
+  .btn-ghost{
+    background:transparent;
+    border-color:var(--slate-700);
+    color:var(--slate-300);
+  }
+  .btn-ghost:hover{ background:var(--slate-800); }
+
+  .btn-sm{ padding:7px 12px; font-size:12.5px; border-radius:8px; }
+
+  input[type="file"]{ display:none; }
+
+  /* ---------- Stat Dashboard ---------- */
+  .stats-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+    margin-bottom:24px;
+  }
+
+  .stat-card{
+    background:var(--slate-800);
+    border:1px solid var(--slate-700);
+    border-radius:var(--radius-lg);
+    padding:18px 20px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--shadow-card);
+  }
+  .stat-card::before{
+    content:"";
+    position:absolute; inset:0 auto 0 0;
+    width:3px;
+    background:var(--stat-accent, var(--indigo));
+  }
+  .stat-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--slate-400);
+    font-weight:600;
+    margin:0 0 10px;
+  }
+  .stat-value{
+    font-family:var(--font-mono);
+    font-size:32px;
+    font-weight:700;
+    line-height:1;
+    color:var(--slate-100);
+  }
+  .stat-value small{
+    font-size:16px;
+    color:var(--slate-400);
+    font-weight:500;
+  }
+  .stat-sub{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--slate-400);
+  }
+
+  .stat-card[data-stat="total"]{ --stat-accent:var(--indigo); }
+  .stat-card[data-stat="interviews"]{ --stat-accent:var(--amber); }
+  .stat-card[data-stat="offers"]{ --stat-accent:var(--emerald); }
+  .stat-card[data-stat="response"]{ --stat-accent:var(--slate-accent); }
+
+  /* ---------- Toolbar: search + filters ---------- */
+  .toolbar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+    padding:14px 16px;
+    background:var(--slate-800);
+    border:1px solid var(--slate-700);
+    border-radius:var(--radius-md);
+  }
+
+  .search-field{
+    position:relative;
+    flex:1 1 240px;
+    min-width:200px;
+  }
+  .search-field svg{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; color:var(--slate-400);
+    pointer-events:none;
+  }
+  .search-field input{
+    width:100%;
+    padding:9px 12px 9px 36px;
+    background:var(--slate-900);
+    border:1px solid var(--slate-600);
+    border-radius:9px;
+    color:var(--slate-100);
+    font-size:13.5px;
+    font-family:inherit;
+  }
+  .search-field input::placeholder{ color:var(--slate-400); }
+  .search-field input:focus{ border-color:var(--indigo); outline:none; }
+
+  .filter-group{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+
+  .chip{
+    padding:7px 13px;
+    border-radius:100px;
+    border:1px solid var(--slate-600);
+    background:var(--slate-900);
+    color:var(--slate-300);
+    font-size:12.5px;
+    font-weight:600;
+    transition:all .12s ease;
+  }
+  .chip:hover{ border-color:var(--slate-400); }
+  .chip.active{
+    background:var(--indigo-dim);
+    border-color:var(--indigo);
+    color:#C7D2FE;
+  }
+
+  .divider-v{
+    width:1px; align-self:stretch;
+    background:var(--slate-600);
+    margin:0 2px;
+  }
+
+  /* ============================================================
+     KANBAN BOARD
+     ============================================================ */
+  .board{
+    display:grid;
+    grid-template-columns:repeat(5, minmax(260px, 1fr));
+    gap:16px;
+    align-items:start;
+  }
+
+  .column{
+    background:rgba(30,41,59,0.55);
+    border:1px solid var(--slate-700);
+    border-radius:var(--radius-lg);
+    padding:14px;
+    min-height:200px;
+    display:flex;
+    flex-direction:column;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .column.drag-over{
+    background:rgba(99,102,241,0.08);
+    border-color:var(--indigo);
+  }
+
+  .column-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+    padding:0 2px;
+  }
+  .column-head-left{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .stage-dot{
+    width:9px; height:9px;
+    border-radius:50%;
+    background:var(--col-accent);
+    box-shadow:0 0 0 3px var(--col-accent-dim);
+  }
+  .column-title{
+    font-family:var(--font-display);
+    font-size:13.5px;
+    font-weight:600;
+    letter-spacing:.01em;
+  }
+  .column-count{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--slate-400);
+    background:var(--slate-900);
+    border:1px solid var(--slate-600);
+    padding:1px 8px;
+    border-radius:100px;
+  }
+
+  .column[data-stage="wishlist"]{ --col-accent:var(--slate-accent); --col-accent-dim:var(--slate-accent-dim); }
+  .column[data-stage="applied"]{ --col-accent:var(--indigo); --col-accent-dim:var(--indigo-dim); }
+  .column[data-stage="interviewing"]{ --col-accent:var(--amber); --col-accent-dim:var(--amber-dim); }
+  .column[data-stage="offer"]{ --col-accent:var(--emerald); --col-accent-dim:var(--emerald-dim); }
+  .column[data-stage="archived"]{ --col-accent:var(--crimson); --col-accent-dim:var(--crimson-dim); }
+
+  .card-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-height:60px;
+    flex:1;
+  }
+
+  .empty-column{
+    border:1.5px dashed var(--slate-600);
+    border-radius:var(--radius-md);
+    padding:20px 10px;
+    text-align:center;
+    color:var(--slate-400);
+    font-size:12.5px;
+  }
+
+  /* ---------- Application Card ---------- */
+  .app-card{
+    background:var(--slate-800);
+    border:1px solid var(--slate-700);
+    border-left:3px solid var(--col-accent);
+    border-radius:var(--radius-md);
+    padding:13px 14px;
+    box-shadow:var(--shadow-card);
+    cursor:grab;
+    transition:transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    position:relative;
+  }
+  .app-card:hover{ transform:translateY(-2px); border-color:var(--slate-400); }
+  .app-card:active{ cursor:grabbing; }
+  .app-card.dragging{ opacity:.4; }
+
+  .app-card.flagged{
+    box-shadow:var(--shadow-card), 0 0 0 1px var(--amber);
+  }
+
+  .card-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    margin-bottom:6px;
+  }
+  .card-role{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.3;
+  }
+  .card-company{
+    font-size:12.5px;
+    color:var(--slate-400);
+    font-weight:500;
+    margin-top:1px;
+  }
+
+  .card-menu-btn{
+    background:transparent;
+    border:none;
+    color:var(--slate-400);
+    padding:2px 4px;
+    border-radius:6px;
+    line-height:0;
+    flex-shrink:0;
+  }
+  .card-menu-btn:hover{ background:var(--slate-700); color:var(--slate-100); }
+  .card-menu-btn svg{ width:16px; height:16px; }
+
+  .card-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin:8px 0;
+  }
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    font-weight:600;
+    padding:3px 8px;
+    border-radius:100px;
+    background:var(--slate-900);
+    border:1px solid var(--slate-600);
+    color:var(--slate-300);
+  }
+  .badge-location svg{ width:11px; height:11px; }
+
+  .badge-flag{
+    background:var(--amber-dim);
+    border-color:var(--amber);
+    color:#FDE68A;
+    animation:pulse-flag 2.2s ease-in-out infinite;
+  }
+  @keyframes pulse-flag{
+    0%, 100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.45); }
+    50%{ box-shadow:0 0 0 5px rgba(245,158,11,0); }
+  }
+
+  .card-salary{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    color:var(--emerald);
+    font-weight:500;
+    margin:6px 0;
+  }
+  .card-salary:empty{ display:none; }
+
+  .card-notes{
+    font-size:12px;
+    color:var(--slate-400);
+    margin:6px 0 0;
+    padding-top:8px;
+    border-top:1px dashed var(--slate-700);
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+
+  .card-footer{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+    margin-top:10px;
+  }
+
+  .stage-select{
+    flex:1;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:600;
+    padding:6px 8px;
+    border-radius:7px;
+    background:var(--slate-900);
+    border:1px solid var(--slate-600);
+    color:var(--slate-100);
+  }
+  .stage-select:focus{ border-color:var(--indigo); outline:none; }
+
+  .card-link{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:28px; height:28px;
+    border-radius:7px;
+    border:1px solid var(--slate-600);
+    color:var(--slate-300);
+    flex-shrink:0;
+    text-decoration:none;
+  }
+  .card-link:hover{ border-color:var(--indigo); color:var(--indigo); }
+  .card-link svg{ width:14px; height:14px; }
+
+  /* ============================================================
+     MODAL — Application Logger Form
+     ============================================================ */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(4,8,20,0.72);
+    backdrop-filter:blur(3px);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .modal-overlay.open{ display:flex; }
+
+  .modal{
+    background:var(--slate-800);
+    border:1px solid var(--slate-700);
+    border-radius:var(--radius-lg);
+    width:100%;
+    max-width:600px;
+    box-shadow:var(--shadow-pop);
+    animation:modal-in .16s ease;
+  }
+  @keyframes modal-in{
+    from{ opacity:0; transform:translateY(8px) scale(.98); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  .modal-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 22px;
+    border-bottom:1px solid var(--slate-700);
+  }
+  .modal-head h2{
+    font-family:var(--font-display);
+    font-size:17px;
+    margin:0;
+  }
+  .modal-close{
+    background:transparent;
+    border:none;
+    color:var(--slate-400);
+    padding:4px;
+    border-radius:6px;
+  }
+  .modal-close:hover{ color:var(--slate-100); background:var(--slate-700); }
+  .modal-close svg{ width:20px; height:20px; }
+
+  .modal-body{
+    padding:22px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+  }
+  .field{ display:flex; flex-direction:column; gap:6px; }
+  .field.full{ grid-column:1 / -1; }
+  .field label{
+    font-size:12px;
+    font-weight:600;
+    color:var(--slate-300);
+  }
+  .field .req{ color:var(--crimson); }
+  .field input,
+  .field select,
+  .field textarea{
+    font-family:inherit;
+    font-size:13.5px;
+    padding:9px 11px;
+    background:var(--slate-900);
+    border:1px solid var(--slate-600);
+    border-radius:9px;
+    color:var(--slate-100);
+    width:100%;
+  }
+  .field textarea{ resize:vertical; min-height:64px; font-family:inherit; }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus{ border-color:var(--indigo); outline:none; }
+
+  .modal-foot{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    padding:18px 22px 22px;
+  }
+
+  /* ============================================================
+     TOAST
+     ============================================================ */
+  .toast{
+    position:fixed;
+    bottom:24px; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--slate-800);
+    border:1px solid var(--slate-600);
+    color:var(--slate-100);
+    padding:11px 18px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    box-shadow:var(--shadow-pop);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .18s ease, transform .18s ease;
+    z-index:200;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast-dot{ width:7px; height:7px; border-radius:50%; background:var(--emerald); flex-shrink:0; }
+  .toast.error .toast-dot{ background:var(--crimson); }
+
+  /* ============================================================
+     RESPONSIVE
+     ============================================================ */
+  @media (max-width: 1180px){
+    .board{ grid-template-columns:repeat(5, minmax(260px, 1fr)); overflow-x:auto; padding-bottom:6px; }
+    .app-shell{ padding:20px 16px 60px; }
+  }
+  @media (max-width: 900px){
+    .stats-grid{ grid-template-columns:repeat(2, 1fr); }
+    .board{ display:flex; overflow-x:auto; scroll-snap-type:x mandatory; }
+    .column{ min-width:82vw; scroll-snap-align:start; }
+    .modal-body{ grid-template-columns:1fr; }
+  }
+  @media (max-width: 560px){
+    .stats-grid{ grid-template-columns:1fr 1fr; gap:10px; }
+    .stat-value{ font-size:26px; }
+    .app-header{ flex-direction:column; }
+    .header-actions{ width:100%; }
+    .header-actions .btn{ flex:1; justify-content:center; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ===================== HEADER ===================== -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 12h4l2-5 4 10 2-5h4" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>CareerPath</h1>
+        <p>Internship &amp; job application tracker — stored only on this device</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" id="btnImport" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0-4-4m4 4 4-4M5 21h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Import
+      </button>
+      <input type="file" id="importFileInput" accept="application/json">
+
+      <button class="btn btn-ghost btn-sm" id="btnExportJson" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V9m0 0 4 4m-4-4-4 4M5 3h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export JSON
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btnExportCsv" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 21V9m0 0 4 4m-4-4-4 4M5 3h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Export CSV
+      </button>
+
+      <button class="btn btn-primary" id="btnAddApp" type="button">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        Log Application
+      </button>
+    </div>
+  </header>
+
+  <!-- ===================== ANALYTICS ===================== -->
+  <section class="stats-grid" aria-label="Application overview statistics">
+    <div class="stat-card" data-stat="total">
+      <p class="stat-label">Total Applications</p>
+      <p class="stat-value" id="statTotal">0</p>
+      <p class="stat-sub" id="statTotalSub">Nothing logged yet</p>
+    </div>
+    <div class="stat-card" data-stat="interviews">
+      <p class="stat-label">Active Interviews</p>
+      <p class="stat-value" id="statInterviews">0</p>
+      <p class="stat-sub" id="statInterviewsSub">No interviews scheduled</p>
+    </div>
+    <div class="stat-card" data-stat="offers">
+      <p class="stat-label">Offers Received</p>
+      <p class="stat-value" id="statOffers">0</p>
+      <p class="stat-sub" id="statOffersSub">Keep applying</p>
+    </div>
+    <div class="stat-card" data-stat="response">
+      <p class="stat-label">Response Rate</p>
+      <p class="stat-value" id="statResponse">0<small>%</small></p>
+      <p class="stat-sub">Interviewing + Offers ÷ Total</p>
+    </div>
+  </section>
+
+  <!-- ===================== TOOLBAR ===================== -->
+  <section class="toolbar" aria-label="Search and filters">
+    <div class="search-field">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.8"/><path d="m21 21-4.3-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <input type="search" id="searchInput" placeholder="Search by company, role, or location…" aria-label="Search applications">
+    </div>
+
+    <div class="divider-v"></div>
+
+    <div class="filter-group" role="group" aria-label="Filter by stage">
+      <button class="chip active" data-filter-stage="all" type="button">All Stages</button>
+      <button class="chip" data-filter-stage="wishlist" type="button">Wishlist</button>
+      <button class="chip" data-filter-stage="applied" type="button">Applied</button>
+      <button class="chip" data-filter-stage="interviewing" type="button">Interviewing</button>
+      <button class="chip" data-filter-stage="offer" type="button">Offers</button>
+      <button class="chip" data-filter-stage="archived" type="button">Archived</button>
+    </div>
+
+    <div class="divider-v"></div>
+
+    <div class="filter-group" role="group" aria-label="Filter by work arrangement">
+      <button class="chip" data-filter-location="all" type="button">Any Arrangement</button>
+      <button class="chip" data-filter-location="Remote" type="button">Remote Only</button>
+      <button class="chip" data-filter-location="On-site" type="button">On-site</button>
+      <button class="chip" data-filter-location="Hybrid" type="button">Hybrid</button>
+    </div>
+  </section>
+
+  <!-- ===================== KANBAN BOARD ===================== -->
+  <main class="board" id="board" aria-label="Application pipeline board">
+    <section class="column" data-stage="wishlist">
+      <div class="column-head">
+        <div class="column-head-left">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <h2 class="column-title">Wishlist / Saved</h2>
+        </div>
+        <span class="column-count" id="count-wishlist">0</span>
+      </div>
+      <div class="card-list" data-stage-list="wishlist"></div>
+    </section>
+
+    <section class="column" data-stage="applied">
+      <div class="column-head">
+        <div class="column-head-left">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <h2 class="column-title">Applied</h2>
+        </div>
+        <span class="column-count" id="count-applied">0</span>
+      </div>
+      <div class="card-list" data-stage-list="applied"></div>
+    </section>
+
+    <section class="column" data-stage="interviewing">
+      <div class="column-head">
+        <div class="column-head-left">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <h2 class="column-title">Interviewing</h2>
+        </div>
+        <span class="column-count" id="count-interviewing">0</span>
+      </div>
+      <div class="card-list" data-stage-list="interviewing"></div>
+    </section>
+
+    <section class="column" data-stage="offer">
+      <div class="column-head">
+        <div class="column-head-left">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <h2 class="column-title">Offer Received</h2>
+        </div>
+        <span class="column-count" id="count-offer">0</span>
+      </div>
+      <div class="card-list" data-stage-list="offer"></div>
+    </section>
+
+    <section class="column" data-stage="archived">
+      <div class="column-head">
+        <div class="column-head-left">
+          <span class="stage-dot" aria-hidden="true"></span>
+          <h2 class="column-title">Archived / Declined</h2>
+        </div>
+        <span class="column-count" id="count-archived">0</span>
+      </div>
+      <div class="card-list" data-stage-list="archived"></div>
+    </section>
+  </main>
+
+</div>
+
+<!-- ===================== MODAL: Application Form ===================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-head">
+      <h2 id="modalTitle">Log Application</h2>
+      <button class="modal-close" id="modalCloseBtn" type="button" aria-label="Close form">
+        <svg viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <form id="appForm">
+      <input type="hidden" id="fieldId">
+
+      <div class="modal-body">
+        <div class="field">
+          <label for="fieldCompany">Company Name <span class="req">*</span></label>
+          <input type="text" id="fieldCompany" required placeholder="e.g. Northwind Logistics">
+        </div>
+        <div class="field">
+          <label for="fieldRole">Role Title <span class="req">*</span></label>
+          <input type="text" id="fieldRole" required placeholder="e.g. Marketing Intern">
+        </div>
+
+        <div class="field">
+          <label for="fieldLocation">Job Location</label>
+          <select id="fieldLocation">
+            <option value="On-site">On-site</option>
+            <option value="Hybrid">Hybrid</option>
+            <option value="Remote">Remote</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="fieldStage">Stage</label>
+          <select id="fieldStage">
+            <option value="wishlist">Wishlist / Saved</option>
+            <option value="applied">Applied</option>
+            <option value="interviewing">Interviewing</option>
+            <option value="offer">Offer Received</option>
+            <option value="archived">Archived / Declined</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="fieldAppliedDate">Application Date</label>
+          <input type="date" id="fieldAppliedDate">
+        </div>
+        <div class="field">
+          <label for="fieldSalary">Salary / Stipend Estimate</label>
+          <input type="text" id="fieldSalary" placeholder="e.g. ₱15,000 / month">
+        </div>
+
+        <div class="field full">
+          <label for="fieldLink">Job Posting Link</label>
+          <input type="url" id="fieldLink" placeholder="https://…">
+        </div>
+
+        <div class="field">
+          <label for="fieldContact">Contact Person / Email</label>
+          <input type="text" id="fieldContact" placeholder="Name or email">
+        </div>
+        <div class="field">
+          <label for="fieldInterviewDate">Interview / Follow-up Date</label>
+          <input type="datetime-local" id="fieldInterviewDate">
+        </div>
+
+        <div class="field full">
+          <label for="fieldNotes">Notes</label>
+          <textarea id="fieldNotes" placeholder="Prep notes, interviewer names, next steps…"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" id="btnDeleteApp" style="display:none; margin-right:auto; color:var(--crimson); border-color:var(--crimson);">Delete</button>
+        <button type="button" class="btn btn-ghost" id="btnCancelForm">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="btnSaveApp">Save Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-dot" aria-hidden="true"></span>
+  <span id="toastMessage">Saved</span>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     STATE + STORAGE
+     ============================================================ */
+  var STORAGE_KEY = "careerpath.applications.v1";
+  var applications = [];
+  var activeStageFilter = "all";
+  var activeLocationFilter = "all";
+  var searchTerm = "";
+  var draggedCardId = null;
+
+  var STAGE_LABELS = {
+    wishlist: "Wishlist / Saved",
+    applied: "Applied",
+    interviewing: "Interviewing",
+    offer: "Offer Received",
+    archived: "Archived / Declined"
+  };
+  var STAGE_ORDER = ["wishlist", "applied", "interviewing", "offer", "archived"];
+
+  function loadApplications(){
+    try{
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      applications = raw ? JSON.parse(raw) : [];
+    }catch(err){
+      console.warn("Could not read saved applications, starting fresh.", err);
+      applications = [];
+    }
+  }
+
+  function persistApplications(){
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(applications));
+    }catch(err){
+      showToast("Could not save — your browser storage may be full.", true);
+    }
+  }
+
+  function makeId(){
+    if(window.crypto && window.crypto.randomUUID){
+      return window.crypto.randomUUID();
+    }
+    return "app-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9);
+  }
+
+  /* ============================================================
+     DOM REFERENCES
+     ============================================================ */
+  var board = document.getElementById("board");
+  var searchInput = document.getElementById("searchInput");
+  var modalOverlay = document.getElementById("modalOverlay");
+  var appForm = document.getElementById("appForm");
+  var modalTitle = document.getElementById("modalTitle");
+  var btnDeleteApp = document.getElementById("btnDeleteApp");
+  var toastEl = document.getElementById("toast");
+  var toastMessage = document.getElementById("toastMessage");
+
+  var fields = {
+    id: document.getElementById("fieldId"),
+    company: document.getElementById("fieldCompany"),
+    role: document.getElementById("fieldRole"),
+    location: document.getElementById("fieldLocation"),
+    stage: document.getElementById("fieldStage"),
+    appliedDate: document.getElementById("fieldAppliedDate"),
+    salary: document.getElementById("fieldSalary"),
+    link: document.getElementById("fieldLink"),
+    contact: document.getElementById("fieldContact"),
+    interviewDate: document.getElementById("fieldInterviewDate"),
+    notes: document.getElementById("fieldNotes")
+  };
+
+  /* ============================================================
+     RENDERING
+     ============================================================ */
+  function escapeHtml(str){
+    var div = document.createElement("div");
+    div.textContent = str == null ? "" : String(str);
+    return div.innerHTML;
+  }
+
+  function isInterviewSoon(app){
+    if(!app.interviewDate) return false;
+    var target = new Date(app.interviewDate).getTime();
+    if(isNaN(target)) return false;
+    var now = Date.now();
+    var hoursAway = (target - now) / (1000 * 60 * 60);
+    // Flag anything from right now up to 48 hours out.
+    return hoursAway >= -1 && hoursAway <= 48;
+  }
+
+  function formatDate(value){
+    if(!value) return "";
+    var d = new Date(value);
+    if(isNaN(d.getTime())) return "";
+    var opts = { month: "short", day: "numeric", year: "numeric" };
+    return d.toLocaleDateString(undefined, opts);
+  }
+
+  function formatDateTime(value){
+    if(!value) return "";
+    var d = new Date(value);
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  }
+
+  function locationIcon(){
+    return '<svg viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="10" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg>';
+  }
+
+  function matchesFilters(app){
+    if(activeStageFilter !== "all" && app.stage !== activeStageFilter) return false;
+    if(activeLocationFilter !== "all" && app.location !== activeLocationFilter) return false;
+    if(searchTerm){
+      var haystack = (app.company + " " + app.role + " " + app.location).toLowerCase();
+      if(haystack.indexOf(searchTerm) === -1) return false;
+    }
+    return true;
+  }
+
+  function buildCard(app){
+    var card = document.createElement("article");
+    card.className = "app-card" + (isInterviewSoon(app) ? " flagged" : "");
+    card.setAttribute("draggable", "true");
+    card.dataset.id = app.id;
+
+    var badges = "";
+    badges += '<span class="badge badge-location">' + locationIcon() + escapeHtml(app.location || "On-site") + "</span>";
+    if(app.appliedDate){
+      badges += '<span class="badge">Applied ' + escapeHtml(formatDate(app.appliedDate)) + "</span>";
+    }
+    if(isInterviewSoon(app)){
+      badges += '<span class="badge badge-flag">⏰ ' + escapeHtml(formatDateTime(app.interviewDate)) + "</span>";
+    } else if(app.interviewDate) {
+      badges += '<span class="badge">Next: ' + escapeHtml(formatDateTime(app.interviewDate)) + "</span>";
+    }
+
+    var stageOptions = STAGE_ORDER.map(function(stage){
+      var selected = stage === app.stage ? " selected" : "";
+      return '<option value="' + stage + '"' + selected + ">" + STAGE_LABELS[stage] + "</option>";
+    }).join("");
+
+    var linkButton = app.link
+      ? '<a class="card-link" href="' + escapeHtml(app.link) + '" target="_blank" rel="noopener noreferrer" title="Open job posting" aria-label="Open job posting for ' + escapeHtml(app.role) + '"><svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>'
+      : "";
+
+    card.innerHTML =
+      '<div class="card-top">' +
+        '<div>' +
+          '<div class="card-role">' + escapeHtml(app.role || "Untitled Role") + "</div>" +
+          '<div class="card-company">' + escapeHtml(app.company || "Unknown company") + "</div>" +
+        "</div>" +
+        '<button class="card-menu-btn" type="button" data-action="edit" aria-label="Edit ' + escapeHtml(app.role) + ' at ' + escapeHtml(app.company) + '">' +
+          '<svg viewBox="0 0 24 24" fill="none"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>' +
+        "</button>" +
+      "</div>" +
+      '<div class="card-meta">' + badges + "</div>" +
+      (app.salary ? '<div class="card-salary">' + escapeHtml(app.salary) + "</div>" : "") +
+      (app.notes ? '<p class="card-notes">' + escapeHtml(app.notes) + "</p>" : "") +
+      '<div class="card-footer">' +
+        '<select class="stage-select" aria-label="Change stage for ' + escapeHtml(app.role) + '">' + stageOptions + "</select>" +
+        linkButton +
+      "</div>";
+
+    // Open the edit modal when the card body (not the select/link) is clicked.
+    card.addEventListener("click", function(evt){
+      var tag = evt.target.tagName;
+      if(tag === "SELECT" || tag === "OPTION" || evt.target.closest("a")) return;
+      openModal(app.id);
+    });
+
+    // Quick stage change from the dropdown.
+    var select = card.querySelector(".stage-select");
+    select.addEventListener("change", function(){
+      updateStage(app.id, select.value);
+    });
+
+    // Drag and drop wiring (desktop pointer devices).
+    card.addEventListener("dragstart", function(){
+      draggedCardId = app.id;
+      card.classList.add("dragging");
+    });
+    card.addEventListener("dragend", function(){
+      draggedCardId = null;
+      card.classList.remove("dragging");
+    });
+
+    return card;
+  }
+
+  function render(){
+    STAGE_ORDER.forEach(function(stage){
+      var list = board.querySelector('[data-stage-list="' + stage + '"]');
+      list.innerHTML = "";
+
+      var stageApps = applications.filter(function(app){ return app.stage === stage; });
+      document.getElementById("count-" + stage).textContent = stageApps.length;
+
+      var visibleApps = stageApps.filter(matchesFilters);
+
+      if(visibleApps.length === 0){
+        var empty = document.createElement("div");
+        empty.className = "empty-column";
+        empty.textContent = stageApps.length === 0
+          ? "No applications yet"
+          : "No matches in this stage";
+        list.appendChild(empty);
+        return;
+      }
+
+      // Most recently added first, so new entries are easy to find.
+      visibleApps
+        .slice()
+        .sort(function(a, b){ return (b.createdAt || 0) - (a.createdAt || 0); })
+        .forEach(function(app){ list.appendChild(buildCard(app)); });
+    });
+
+    renderStats();
+  }
+
+  function renderStats(){
+    var total = applications.length;
+    var interviewing = applications.filter(function(a){ return a.stage === "interviewing"; }).length;
+    var offers = applications.filter(function(a){ return a.stage === "offer"; }).length;
+    var responseRate = total > 0 ? Math.round(((interviewing + offers) / total) * 100) : 0;
+    var upcoming = applications.filter(isInterviewSoon).length;
+
+    document.getElementById("statTotal").textContent = total;
+    document.getElementById("statTotalSub").textContent = total === 0
+      ? "Nothing logged yet"
+      : total + " application" + (total === 1 ? "" : "s") + " in your pipeline";
+
+    document.getElementById("statInterviews").textContent = interviewing;
+    document.getElementById("statInterviewsSub").textContent = upcoming > 0
+      ? upcoming + " within the next 48 hours"
+      : "No interviews scheduled";
+
+    document.getElementById("statOffers").textContent = offers;
+    document.getElementById("statOffersSub").textContent = offers > 0 ? "Nice work" : "Keep applying";
+
+    document.getElementById("statResponse").innerHTML = responseRate + "<small>%</small>";
+  }
+
+  /* ============================================================
+     STAGE UPDATES (dropdown + drag/drop)
+     ============================================================ */
+  function updateStage(id, newStage){
+    var app = applications.find(function(a){ return a.id === id; });
+    if(!app || app.stage === newStage) return;
+    app.stage = newStage;
+    app.updatedAt = Date.now();
+    persistApplications();
+    render();
+    showToast("Moved to " + STAGE_LABELS[newStage]);
+  }
+
+  STAGE_ORDER.forEach(function(stage){
+    var column = board.querySelector('.column[data-stage="' + stage + '"]');
+    column.addEventListener("dragover", function(evt){
+      evt.preventDefault();
+      column.classList.add("drag-over");
+    });
+    column.addEventListener("dragleave", function(){
+      column.classList.remove("drag-over");
+    });
+    column.addEventListener("drop", function(evt){
+      evt.preventDefault();
+      column.classList.remove("drag-over");
+      if(draggedCardId){
+        updateStage(draggedCardId, stage);
+      }
+    });
+  });
+
+  /* ============================================================
+     MODAL (create / edit)
+     ============================================================ */
+  function resetForm(){
+    appForm.reset();
+    fields.id.value = "";
+    fields.stage.value = "wishlist";
+    fields.location.value = "On-site";
+  }
+
+  function openModal(id){
+    resetForm();
+    if(id){
+      var app = applications.find(function(a){ return a.id === id; });
+      if(!app) return;
+      modalTitle.textContent = "Edit Application";
+      btnDeleteApp.style.display = "inline-flex";
+      fields.id.value = app.id;
+      fields.company.value = app.company || "";
+      fields.role.value = app.role || "";
+      fields.location.value = app.location || "On-site";
+      fields.stage.value = app.stage || "wishlist";
+      fields.appliedDate.value = app.appliedDate || "";
+      fields.salary.value = app.salary || "";
+      fields.link.value = app.link || "";
+      fields.contact.value = app.contact || "";
+      fields.interviewDate.value = app.interviewDate || "";
+      fields.notes.value = app.notes || "";
+    } else {
+      modalTitle.textContent = "Log Application";
+      btnDeleteApp.style.display = "none";
+    }
+    modalOverlay.classList.add("open");
+    fields.company.focus();
+  }
+
+  function closeModal(){
+    modalOverlay.classList.remove("open");
+  }
+
+  document.getElementById("btnAddApp").addEventListener("click", function(){ openModal(null); });
+  document.getElementById("modalCloseBtn").addEventListener("click", closeModal);
+  document.getElementById("btnCancelForm").addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", function(evt){
+    if(evt.target === modalOverlay) closeModal();
+  });
+  document.addEventListener("keydown", function(evt){
+    if(evt.key === "Escape" && modalOverlay.classList.contains("open")) closeModal();
+  });
+
+  appForm.addEventListener("submit", function(evt){
+    evt.preventDefault();
+
+    var id = fields.id.value;
+    var payload = {
+      company: fields.company.value.trim(),
+      role: fields.role.value.trim(),
+      location: fields.location.value,
+      stage: fields.stage.value,
+      appliedDate: fields.appliedDate.value,
+      salary: fields.salary.value.trim(),
+      link: fields.link.value.trim(),
+      contact: fields.contact.value.trim(),
+      interviewDate: fields.interviewDate.value,
+      notes: fields.notes.value.trim()
+    };
+
+    if(!payload.company || !payload.role){
+      showToast("Company and role are required.", true);
+      return;
+    }
+
+    if(id){
+      var existing = applications.find(function(a){ return a.id === id; });
+      Object.assign(existing, payload);
+      existing.updatedAt = Date.now();
+      showToast("Application updated");
+    } else {
+      payload.id = makeId();
+      payload.createdAt = Date.now();
+      applications.push(payload);
+      showToast("Application logged");
+    }
+
+    persistApplications();
+    render();
+    closeModal();
+  });
+
+  btnDeleteApp.addEventListener("click", function(){
+    var id = fields.id.value;
+    if(!id) return;
+    var app = applications.find(function(a){ return a.id === id; });
+    var label = app ? (app.role + " at " + app.company) : "this application";
+    if(!window.confirm('Delete "' + label + '"? This cannot be undone.')) return;
+    applications = applications.filter(function(a){ return a.id !== id; });
+    persistApplications();
+    render();
+    closeModal();
+    showToast("Application deleted");
+  });
+
+  /* ============================================================
+     SEARCH + FILTERS
+     ============================================================ */
+  searchInput.addEventListener("input", function(){
+    searchTerm = searchInput.value.trim().toLowerCase();
+    render();
+  });
+
+  document.querySelectorAll("[data-filter-stage]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll("[data-filter-stage]").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      activeStageFilter = btn.dataset.filterStage;
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-filter-location]").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      document.querySelectorAll("[data-filter-location]").forEach(function(b){ b.classList.remove("active"); });
+      btn.classList.add("active");
+      activeLocationFilter = btn.dataset.filterLocation;
+      render();
+    });
+  });
+
+  /* ============================================================
+     EXPORT / IMPORT
+     ============================================================ */
+  function downloadFile(filename, content, mimeType){
+    var blob = new Blob([content], { type: mimeType });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  document.getElementById("btnExportJson").addEventListener("click", function(){
+    if(applications.length === 0){
+      showToast("Nothing to export yet.", true);
+      return;
+    }
+    downloadFile("careerpath-applications.json", JSON.stringify(applications, null, 2), "application/json");
+    showToast("Exported JSON backup");
+  });
+
+  function csvEscape(value){
+    var str = value == null ? "" : String(value);
+    if(/[",\n]/.test(str)){
+      str = '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  document.getElementById("btnExportCsv").addEventListener("click", function(){
+    if(applications.length === 0){
+      showToast("Nothing to export yet.", true);
+      return;
+    }
+    var columns = ["company", "role", "location", "stage", "appliedDate", "salary", "link", "contact", "interviewDate", "notes"];
+    var header = columns.join(",");
+    var rows = applications.map(function(app){
+      return columns.map(function(col){ return csvEscape(app[col]); }).join(",");
+    });
+    downloadFile("careerpath-applications.csv", [header].concat(rows).join("\n"), "text/csv");
+    showToast("Exported CSV backup");
+  });
+
+  document.getElementById("btnImport").addEventListener("click", function(){
+    document.getElementById("importFileInput").click();
+  });
+
+  document.getElementById("importFileInput").addEventListener("change", function(evt){
+    var file = evt.target.files[0];
+    if(!file) return;
+
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var incoming = JSON.parse(reader.result);
+        if(!Array.isArray(incoming)) throw new Error("File does not contain an application list.");
+
+        var validStages = Object.keys(STAGE_LABELS);
+        var imported = 0;
+        incoming.forEach(function(item){
+          if(!item || !item.company || !item.role) return;
+          applications.push({
+            id: makeId(),
+            company: String(item.company),
+            role: String(item.role),
+            location: item.location || "On-site",
+            stage: validStages.indexOf(item.stage) !== -1 ? item.stage : "wishlist",
+            appliedDate: item.appliedDate || "",
+            salary: item.salary || "",
+            link: item.link || "",
+            contact: item.contact || "",
+            interviewDate: item.interviewDate || "",
+            notes: item.notes || "",
+            createdAt: Date.now()
+          });
+          imported++;
+        });
+
+        if(imported === 0){
+          showToast("No valid applications found in that file.", true);
+          return;
+        }
+
+        persistApplications();
+        render();
+        showToast("Imported " + imported + " application" + (imported === 1 ? "" : "s"));
+      }catch(err){
+        showToast("Could not read that file: " + err.message, true);
+      }
+    };
+    reader.readAsText(file);
+    evt.target.value = "";
+  });
+
+  /* ============================================================
+     TOAST NOTIFICATIONS
+     ============================================================ */
+  var toastTimer = null;
+  function showToast(message, isError){
+    toastMessage.textContent = message;
+    toastEl.classList.toggle("error", !!isError);
+    toastEl.classList.add("show");
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(function(){
+      toastEl.classList.remove("show");
+    }, 2600);
+  }
+
+  /* ============================================================
+     REMINDER CHECK — refresh flags periodically so the 48h
+     window stays accurate without requiring a page reload.
+     ============================================================ */
+  window.setInterval(render, 60 * 1000);
+
+  /* ============================================================
+     INIT
+     ============================================================ */
+  loadApplications();
+  render();
+})();
+</script>
+
+</body>
+</html>
